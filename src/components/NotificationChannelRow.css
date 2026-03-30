@@ -1,0 +1,72 @@
+.channel-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 14px 16px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.channel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.channel-field label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.channel-field input,
+.channel-field select {
+  height: 36px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 0.9rem;
+  background-color: #ffffff;
+  color: #1a1a2e;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.channel-field input:focus,
+.channel-field select:focus {
+  border-color: #63b3ed;
+}
+
+.channel-field.channel-type select {
+  width: 110px;
+}
+
+.channel-field.channel-value input {
+  width: 220px;
+}
+
+.input-readonly {
+  background-color: #edf2f7 !important;
+  color: #718096 !important;
+  cursor: default;
+  width: 180px;
+}
+
+.btn-remove {
+  height: 36px;
+  background-color: #fff5f5;
+  color: #e53e3e;
+  border: 1px solid #fed7d7;
+  padding: 0 14px;
+  align-self: flex-end;
+  margin-bottom: 0;
+}
+
+.btn-remove:hover {
+  background-color: #fed7d7;
+}
