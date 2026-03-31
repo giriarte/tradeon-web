@@ -1,0 +1,46 @@
+{
+  "BollingerBandReEntry": {
+    "bb_length": { "default": "26", "description": "Number of periods for the Bollinger Band moving average." },
+    "bb_variation_min": { "default": "1.0", "description": "Minimum band width variation (%) required to trigger a re-entry signal." }
+  },
+  "RSI": {
+    "rsi_length": { "default": "14", "description": "Number of periods used to calculate the RSI." },
+    "rsi_overbought": { "default": "70", "description": "RSI level above which the asset is considered overbought." },
+    "rsi_oversold": { "default": "30", "description": "RSI level below which the asset is considered oversold." }
+  },
+  "MACD": {
+    "macd_fast": { "default": "12", "description": "Number of periods for the fast EMA." },
+    "macd_slow": { "default": "26", "description": "Number of periods for the slow EMA." },
+    "macd_signal": { "default": "9", "description": "Number of periods for the signal line smoothing." }
+  },
+  "EMA": {
+    "ema_length": { "default": "20", "description": "Number of periods for the Exponential Moving Average." }
+  },
+  "SMA": {
+    "sma_length": { "default": "50", "description": "Number of periods for the Simple Moving Average." }
+  },
+  "ATR": {
+    "atr_length": { "default": "14", "description": "Number of periods for the Average True Range calculation." },
+    "atr_multiplier": { "default": "1.5", "description": "Multiplier applied to ATR for threshold calculation." }
+  },
+  "Stochastic": {
+    "stoch_k_length": { "default": "14", "description": "Look-back period for %K (the fast stochastic line)." },
+    "stoch_k_smooth": { "default": "3", "description": "Smoothing periods applied to %K." },
+    "stoch_d_smooth": { "default": "3", "description": "Smoothing periods applied to %D (signal line)." },
+    "stoch_overbought": { "default": "80", "description": "Level above which the oscillator signals overbought conditions." },
+    "stoch_oversold": { "default": "20", "description": "Level below which the oscillator signals oversold conditions." }
+  },
+  "VWAP": {
+    "vwap_deviation": { "default": "1.0", "description": "Standard deviation band distance from VWAP used as threshold." }
+  },
+  "SuperTrend": {
+    "supertrend_atr_length": { "default": "10", "description": "ATR period used internally by the SuperTrend calculation." },
+    "supertrend_multiplier": { "default": "3.0", "description": "ATR multiplier that controls the width of the SuperTrend bands." }
+  },
+  "IchimokuCloud": {
+    "tenkan_length": { "default": "9", "description": "Conversion line period (Tenkan-sen)." },
+    "kijun_length": { "default": "26", "description": "Base line period (Kijun-sen)." },
+    "senkou_b_length": { "default": "52", "description": "Leading span B period (Senkou Span B)." },
+    "displacement": { "default": "26", "description": "Number of periods to shift the cloud forward (chikou displacement)." }
+  }
+}
