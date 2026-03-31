@@ -1,0 +1,25 @@
+{
+  "email":     { "S": "alice.trader@example.com" },
+  "userId":    { "S": "user-001" },
+  "firstName": { "S": "Alice" },
+  "lastName":  { "S": "Trader" },
+  "phoneNumber": { "S": "+1-555-0100" },
+  "notificationChannels": {
+    "L": [
+      {
+        "M": {
+          "channelId": { "S": "ch-1" },
+          "type":      { "S": "Email" },
+          "value":     { "S": "alice.trader@example.com" }
+        }
+      },
+      {
+        "M": {
+          "channelId": { "S": "ch-2" },
+          "type":      { "S": "SMS" },
+          "value":     { "S": "+1-555-0100" }
+        }
+      }
+    ]
+  }
+}

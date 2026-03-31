@@ -39,6 +39,8 @@ function StrategyManagement() {
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [error, setError] = useState(null)
+  const [creating, setCreating] = useState(false)
+  const [newStrategyName, setNewStrategyName] = useState('')
 
   useEffect(() => {
     Promise.all([
@@ -60,12 +62,30 @@ function StrategyManagement() {
       })
   }, [])
 
+  const handleCreateStrategy = () => {
+    if (!newStrategyName.trim()) return
+    setCreating(true)
+    fetch(`${BASE_URL}/strategies/user/${USER_ID}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newStrategyName.trim() }),
+    })
+      .then(r => { if (!r.ok) throw new Error(`Failed to create strategy (${r.status})`); return r.json() })
+      .then(data => {
+        setStrategies(prev => [...prev, { strategyId: data.strategyId, name: data.name, enabled: data.enabled }])
+        setNewStrategyName('')
+        setCreating(false)
+        loadStrategy(data.strategyId)
+      })
+      .catch(err => { setError(err.message); setCreating(false) })
+  }
+
   const loadStrategy = (strategyId) => {
     setSelectedId(strategyId)
     setStrategy(null)
     setLoadingForm(true)
     setSaveSuccess(false)
-    fetch(`${BASE_URL}/strategies/${strategyId}`)
+    fetch(`${BASE_URL}/strategies/${USER_ID}/${strategyId}`)
       .then(r => { if (!r.ok) throw new Error(`Failed to load strategy (${r.status})`); return r.json() })
       .then(data => { setStrategy(data); setLoadingForm(false) })
       .catch(err => { setError(err.message); setLoadingForm(false) })
@@ -155,10 +175,22 @@ function StrategyManagement() {
     setSaveSuccess(false)
   }
 
+  const handleDelete = () => {
+    if (!window.confirm(`Delete "${strategy.name}"? This cannot be undone.`)) return
+    fetch(`${BASE_URL}/strategies/${strategy.userId}/${strategy.strategyId}`, { method: 'DELETE' })
+      .then(r => { if (!r.ok) throw new Error(`Failed to delete strategy (${r.status})`) })
+      .then(() => {
+        setStrategies(prev => prev.filter(s => s.strategyId !== strategy.strategyId))
+        setSelectedId(null)
+        setStrategy(null)
+      })
+      .catch(err => setError(err.message))
+  }
+
   const handleSave = () => {
     setSaving(true)
     setSaveSuccess(false)
-    fetch(`${BASE_URL}/strategies/${strategy.strategyId}`, {
+    fetch(`${BASE_URL}/strategies/${strategy.userId}/${strategy.strategyId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(strategy),
@@ -184,7 +216,24 @@ function StrategyManagement() {
       <div className="sm-layout">
 
         <aside className="strategy-list">
-          <h2>Your Strategies</h2>
+          <div className="strategy-list-header">
+            <h2>Your Strategies</h2>
+            <button className="btn-new-strategy" onClick={() => { setNewStrategyName(''); setCreating(true) }} title="New strategy">+</button>
+          </div>
+          {creating && (
+            <div className="new-strategy-row">
+              <input
+                type="text"
+                placeholder="Strategy name"
+                value={newStrategyName}
+                onChange={e => setNewStrategyName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleCreateStrategy(); if (e.key === 'Escape') setCreating(false) }}
+                autoFocus
+              />
+              <button className="btn-confirm-create" onClick={handleCreateStrategy} disabled={!newStrategyName.trim()}>Add</button>
+              <button className="btn-cancel-create" onClick={() => setCreating(false)}>✕</button>
+            </div>
+          )}
           {strategies.length === 0 && <p className="empty-list">No strategies found.</p>}
           {strategies.map(s => (
             <button
@@ -407,6 +456,7 @@ function StrategyManagement() {
 
               <div className="form-actions">
                 {saveSuccess && <span className="save-success">Strategy saved successfully.</span>}
+                <button className="btn-delete" onClick={handleDelete}>Delete</button>
                 <button className="btn-save" onClick={handleSave} disabled={saving}>
                   {saving ? 'Saving...' : 'Save'}
                 </button>

@@ -1,126 +1,183 @@
+const { randomUUID } = require('crypto')
 const express = require('express')
 const cors = require('cors')
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb')
+const { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb')
 
 const app = express()
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 
 app.use(cors())
 app.use(express.json())
 
 // ---------------------------------------------------------------------------
-// In-memory data (replace with database later)
+// DynamoDB setup
 // ---------------------------------------------------------------------------
 
-const users = {
-  'user-001': {
-    userId: 'user-001',
-    firstName: 'Alice',
-    lastName: 'Trader',
-    email: 'alice.trader@example.com',
-    phoneNumber: '+1-555-0100',
-    notificationChannels: [
-      { channelId: 'ch-1', type: 'Email', value: 'alice.trader@example.com' },
-      { channelId: 'ch-2', type: 'SMS', value: '+1-555-0100' },
-    ],
-  },
-}
+const ddbClient = new DynamoDBClient({ region: process.env.AWS_REGION })
+const ddb = DynamoDBDocumentClient.from(ddbClient)
 
-const strategies = {
-  'strat-001': {
-    userId: 'user-001',
-    strategyId: 'strat-001',
-    name: 'BTC Momentum',
-    type: 'CRYPTO',
-    symbols: ['BTC/USDT', 'ETH/USDT'],
-    candleInterval: '1h',
-    cooldownInterval: 5,
-    baseIndicators: [
-      { name: 'RSI', offset: 0, params: { rsi_length: '14', rsi_overbought: '70', rsi_oversold: '30' } },
-      { name: 'MACD', offset: 0, params: { macd_fast: '12', macd_slow: '26', macd_signal: '9' } },
-    ],
-    defaultParams: { threshold: '70', lookback: '5' },
-    notificationChannel: { channelId: 'ch-1', type: 'Email', value: 'alice.trader@example.com' },
-    enabled: true,
-  },
-  'strat-002': {
-    userId: 'user-001',
-    strategyId: 'strat-002',
-    name: 'EUR/USD Breakout',
-    type: 'FOREX',
-    symbols: ['EUR/USD', 'GBP/USD'],
-    candleInterval: '4h',
-    cooldownInterval: 15,
-    baseIndicators: [
-      { name: 'BollingerBandReEntry', offset: 1, params: { bb_length: '26', bb_variation_min: '1.0' } },
-    ],
-    defaultParams: { minVolume: '1000' },
-    notificationChannel: { channelId: 'ch-2', type: 'SMS', value: '+1-555-0100' },
-    enabled: false,
-  },
-}
+const USERS_TABLE = process.env.USERS_TABLE
+const STRATEGIES_TABLE = process.env.STRATEGIES_TABLE
+const USERS_USERID_GSI = process.env.USERS_USERID_GSI
 
 // ---------------------------------------------------------------------------
 // User routes
 // ---------------------------------------------------------------------------
 
 // GET /api/users/:userId
-app.get('/api/users/:userId', (req, res) => {
+app.get('/api/users/:userId', async (req, res) => {
   const { userId } = req.params
   console.log(`[GET] /api/users/${userId}`)
 
-  const user = users[userId]
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' })
+  try {
+    const result = await ddb.send(new QueryCommand({
+      TableName: USERS_TABLE,
+      IndexName: USERS_USERID_GSI,
+      KeyConditionExpression: 'userId = :uid',
+      ExpressionAttributeValues: { ':uid': userId },
+    }))
+
+    if (!result.Items || result.Items.length === 0) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+    res.json(result.Items[0])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
   }
-  res.json(user)
 })
 
 // POST /api/users/:userId
-app.post('/api/users/:userId', (req, res) => {
+app.post('/api/users/:userId', async (req, res) => {
   const { userId } = req.params
   console.log(`[POST] /api/users/${userId}`, req.body)
 
-  if (!users[userId]) {
-    return res.status(404).json({ error: 'User not found' })
+  try {
+    const channels = (req.body.notificationChannels ?? []).map(ch => ({
+      ...ch,
+      channelId: ch.channelId || randomUUID(),
+    }))
+    const item = { ...req.body, userId, notificationChannels: channels }
+    await ddb.send(new PutCommand({
+      TableName: USERS_TABLE,
+      Item: item,
+    }))
+    res.json(item)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
   }
-  users[userId] = { ...users[userId], ...req.body }
-  res.json(users[userId])
 })
 
 // ---------------------------------------------------------------------------
 // Strategy routes
 // ---------------------------------------------------------------------------
 
+// POST /api/strategies/user/:userId  — create a new strategy for a user
+app.post('/api/strategies/user/:userId', async (req, res) => {
+  const { userId } = req.params
+  const { name } = req.body
+  console.log(`[POST] /api/strategies/user/${userId}`, req.body)
+
+  const strategyId = `strat-${randomUUID().slice(0, 8)}`
+  const item = {
+    userId,
+    strategyId,
+    name: name || 'New Strategy',
+    type: 'CRYPTO',
+    symbols: [],
+    candleInterval: '1h',
+    cooldownInterval: 5,
+    baseIndicators: [],
+    defaultParams: {},
+    notificationChannel: null,
+    enabled: false,
+  }
+
+  try {
+    await ddb.send(new PutCommand({ TableName: STRATEGIES_TABLE, Item: item }))
+    res.status(201).json(item)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 // GET /api/strategies/user/:userId  — list strategies for a user
-app.get('/api/strategies/user/:userId', (req, res) => {
+app.get('/api/strategies/user/:userId', async (req, res) => {
   const { userId } = req.params
   console.log(`[GET] /api/strategies/user/${userId}`)
 
-  const list = Object.values(strategies)
-    .filter(s => s.userId === userId)
-    .map(({ strategyId, name, enabled }) => ({ strategyId, name, enabled }))
-  res.json(list)
-})
-
-// GET /api/strategies/:strategyId
-app.get('/api/strategies/:strategyId', (req, res) => {
-  const { strategyId } = req.params
-  console.log(`[GET] /api/strategies/${strategyId}`)
-
-  const strategy = strategies[strategyId]
-  if (!strategy) {
-    return res.status(404).json({ error: 'Strategy not found' })
+  try {
+    const result = await ddb.send(new QueryCommand({
+      TableName: STRATEGIES_TABLE,
+      KeyConditionExpression: 'userId = :uid',
+      ExpressionAttributeValues: { ':uid': userId },
+      ProjectionExpression: 'strategyId, #n, enabled',
+      ExpressionAttributeNames: { '#n': 'name' }, // 'name' is a reserved word in DynamoDB
+    }))
+    res.json(result.Items ?? [])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
   }
-  res.json(strategy)
 })
 
-// POST /api/strategies/:strategyId
-app.post('/api/strategies/:strategyId', (req, res) => {
-  const { strategyId } = req.params
-  console.log(`[POST] /api/strategies/${strategyId}`, req.body)
+// GET /api/strategies/:userId/:strategyId
+app.get('/api/strategies/:userId/:strategyId', async (req, res) => {
+  const { userId, strategyId } = req.params
+  console.log(`[GET] /api/strategies/${userId}/${strategyId}`)
 
-  strategies[strategyId] = { ...strategies[strategyId], ...req.body }
-  res.json(strategies[strategyId])
+  try {
+    const result = await ddb.send(new GetCommand({
+      TableName: STRATEGIES_TABLE,
+      Key: { userId, strategyId },
+    }))
+
+    if (!result.Item) {
+      return res.status(404).json({ error: 'Strategy not found' })
+    }
+    res.json(result.Item)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// POST /api/strategies/:userId/:strategyId
+app.post('/api/strategies/:userId/:strategyId', async (req, res) => {
+  const { userId, strategyId } = req.params
+  console.log(`[POST] /api/strategies/${userId}/${strategyId}`, req.body)
+
+  try {
+    const item = { ...req.body, userId, strategyId }
+    await ddb.send(new PutCommand({
+      TableName: STRATEGIES_TABLE,
+      Item: item,
+    }))
+    res.json(item)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// DELETE /api/strategies/:userId/:strategyId
+app.delete('/api/strategies/:userId/:strategyId', async (req, res) => {
+  const { userId, strategyId } = req.params
+  console.log(`[DELETE] /api/strategies/${userId}/${strategyId}`)
+
+  try {
+    await ddb.send(new DeleteCommand({
+      TableName: STRATEGIES_TABLE,
+      Key: { userId, strategyId },
+    }))
+    res.status(204).send()
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
 })
 
 // ---------------------------------------------------------------------------
