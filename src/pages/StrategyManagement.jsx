@@ -142,7 +142,7 @@ function StrategyManagement() {
   const addIndicator = () => {
     if (!newIndicatorName) return
     const defaultParams = Object.fromEntries(
-      Object.entries(availableIndicators[newIndicatorName] ?? {}).map(([k, v]) => [k, v.default ?? ''])
+      Object.entries(availableIndicators[newIndicatorName]?.parameters ?? {}).map(([k, v]) => [k, v.default ?? ''])
     )
     setStrategy(prev => ({
       ...prev,
@@ -349,7 +349,12 @@ function StrategyManagement() {
                 {strategy.baseIndicators?.map((ind, i) => (
                   <div key={i} className="indicator-row">
                     <div className="indicator-row-header">
-                      <span className="indicator-row-name">{ind.name}</span>
+                      <span className="indicator-row-name">
+                        {ind.name}
+                        {availableIndicators[ind.name]?.description && (
+                          <InfoTooltip text={availableIndicators[ind.name].description} />
+                        )}
+                      </span>
                       <div className="indicator-offset-group">
                         <label>Offset</label>
                         <input
@@ -364,7 +369,7 @@ function StrategyManagement() {
                     {Object.keys(ind.params ?? {}).length > 0 && (
                       <div className="indicator-params">
                         {Object.entries(ind.params).map(([key, val]) => {
-                          const paramDef = availableIndicators[ind.name]?.[key]
+                          const paramDef = availableIndicators[ind.name]?.parameters?.[key]
                           return (
                             <div key={key} className="indicator-param-item">
                               <label>

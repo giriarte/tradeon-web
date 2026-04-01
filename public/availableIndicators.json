@@ -1,46 +1,288 @@
 {
-  "BollingerBandReEntry": {
-    "bb_length": { "default": "26", "description": "Number of periods for the Bollinger Band moving average." },
-    "bb_variation_min": { "default": "1.0", "description": "Minimum band width variation (%) required to trigger a re-entry signal." }
-  },
   "RSI": {
-    "rsi_length": { "default": "14", "description": "Number of periods used to calculate the RSI." },
-    "rsi_overbought": { "default": "70", "description": "RSI level above which the asset is considered overbought." },
-    "rsi_oversold": { "default": "30", "description": "RSI level below which the asset is considered oversold." }
+    "description": "Relative Strength Index — a momentum oscillator that measures the speed and magnitude of price changes to identify overbought or oversold conditions on a scale of 0 to 100.",
+    "parameters": {
+      "rsi_length": { "default": "14", "description": "Number of periods used to calculate the RSI." },
+      "rsi_buy_threshold": { "default": "30", "description": "RSI level below which the asset is considered oversold (triggers BUY signal)." },
+      "rsi_sell_threshold": { "default": "70", "description": "RSI level above which the asset is considered overbought (triggers SELL signal)." }
+    }
   },
-  "MACD": {
-    "macd_fast": { "default": "12", "description": "Number of periods for the fast EMA." },
-    "macd_slow": { "default": "26", "description": "Number of periods for the slow EMA." },
-    "macd_signal": { "default": "9", "description": "Number of periods for the signal line smoothing." }
+  "BollingerBandReEntry": {
+    "description": "Detects re-entry signals when price returns inside the Bollinger Bands from the outside, suggesting potential reversal or mean-reversion trade opportunities.",
+    "parameters": {
+      "bb_length": { "default": "20", "description": "Number of periods for the Bollinger Band moving average." },
+      "bb_std": { "default": "2.0", "description": "Standard deviation multiplier for the bands." },
+      "operation_type": { "default": "1", "description": "Signal type to return: 1 = BUY (re-entry from below), 2 = SELL (re-entry from above)." }
+    }
   },
-  "EMA": {
-    "ema_length": { "default": "20", "description": "Number of periods for the Exponential Moving Average." }
+  "BollingerBandWidth": {
+    "description": "Evaluates volatility by measuring the width of the Bollinger Bands. Useful for detecting squeezes (low volatility) or expansions (high volatility).",
+    "parameters": {
+      "bb_length": { "default": "20", "description": "Number of periods for the Bollinger Band moving average." },
+      "bb_std": { "default": "2.0", "description": "Standard deviation multiplier for the bands." },
+      "bb_variation_min": { "default": "3.0", "description": "Minimum band width percentage required to trigger a signal." },
+      "bb_variation_max": { "default": null, "description": "Maximum band width percentage allowed to trigger a signal (optional)." },
+      "operation_type": { "default": "1", "description": "Signal type to return if the condition is met: 1 = BUY, 2 = SELL." }
+    }
   },
-  "SMA": {
-    "sma_length": { "default": "50", "description": "Number of periods for the Simple Moving Average." }
+  "EMACross": {
+    "description": "Detects a crossover between a fast and slow EMA. Used to identify trend direction changes.",
+    "parameters": {
+      "ema_low": { "default": "9", "description": "Period for the fast (short) EMA." },
+      "ema_high": { "default": "21", "description": "Period for the slow (long) EMA." },
+      "operation_type": { "default": "1", "description": "Signal type: 1 = BUY when fast EMA crosses above slow, 2 = SELL when fast crosses below." }
+    }
   },
-  "ATR": {
-    "atr_length": { "default": "14", "description": "Number of periods for the Average True Range calculation." },
-    "atr_multiplier": { "default": "1.5", "description": "Multiplier applied to ATR for threshold calculation." }
+  "EMADistanceCap": {
+    "description": "Checks if the price is above or below an EMA, but only if the distance between them is within a maximum percentage cap.",
+    "parameters": {
+      "ema_length": { "default": "20", "description": "Number of periods for the EMA calculation." },
+      "distance_pct_cap": { "default": "1.0", "description": "Maximum allowed distance (%) between price and EMA to trigger a signal." },
+      "operation_type": { "default": "1", "description": "Signal type: 1 = BUY (price above EMA), 2 = SELL (price below EMA)." }
+    }
   },
-  "Stochastic": {
-    "stoch_k_length": { "default": "14", "description": "Look-back period for %K (the fast stochastic line)." },
-    "stoch_k_smooth": { "default": "3", "description": "Smoothing periods applied to %K." },
-    "stoch_d_smooth": { "default": "3", "description": "Smoothing periods applied to %D (signal line)." },
-    "stoch_overbought": { "default": "80", "description": "Level above which the oscillator signals overbought conditions." },
-    "stoch_oversold": { "default": "20", "description": "Level below which the oscillator signals oversold conditions." }
+  "EMASlope": {
+    "description": "Measures trend intensity by calculating the percentage slope of an EMA over a lookback period. Useful for filtering only strong or weak trends.",
+    "parameters": {
+      "ema_length": { "default": "20", "description": "Number of periods for the EMA calculation." },
+      "lookback": { "default": "10", "description": "Number of bars back to compare the EMA against for slope calculation." },
+      "min_slope_pct": { "default": "1.0", "description": "Minimum absolute percentage change in the EMA required to trigger a signal." },
+      "min_raw_slope_pct": { "default": "0.0", "description": "Minimum directional (signed) percentage change required. Positive enforces upward slope, negative enforces downward." },
+      "operation_type": { "default": "1", "description": "Signal type to return if the slope threshold is met: 1 = BUY, 2 = SELL." }
+    }
   },
-  "VWAP": {
-    "vwap_deviation": { "default": "1.0", "description": "Standard deviation band distance from VWAP used as threshold." }
+  "MACDCross": {
+    "description": "Detects a crossover between the MACD line and the Signal line. Used to identify momentum direction changes.",
+    "parameters": {
+      "macd_fast": { "default": "12", "description": "Number of periods for the fast EMA." },
+      "macd_slow": { "default": "26", "description": "Number of periods for the slow EMA." },
+      "macd_signal": { "default": "9", "description": "Number of periods for the signal line smoothing." },
+      "operation_type": { "default": "1", "description": "Signal type: 1 = BUY when MACD crosses above signal, 2 = SELL when it crosses below." }
+    }
   },
-  "SuperTrend": {
-    "supertrend_atr_length": { "default": "10", "description": "ATR period used internally by the SuperTrend calculation." },
-    "supertrend_multiplier": { "default": "3.0", "description": "ATR multiplier that controls the width of the SuperTrend bands." }
+  "MACDDivergence": {
+    "description": "Detects bullish or bearish divergence between price and the MACD line, indicating potential trend reversals.",
+    "parameters": {
+      "macd_fast": { "default": "12", "description": "Number of periods for the fast EMA." },
+      "macd_slow": { "default": "26", "description": "Number of periods for the slow EMA." },
+      "macd_signal": { "default": "9", "description": "Number of periods for the signal line smoothing." },
+      "lookback": { "default": "20", "description": "Number of candles to look back for finding the previous peak or trough." },
+      "operation_type": { "default": "1", "description": "Signal type: 1 = BUY for bullish divergence, 2 = SELL for bearish divergence." }
+    }
   },
-  "IchimokuCloud": {
-    "tenkan_length": { "default": "9", "description": "Conversion line period (Tenkan-sen)." },
-    "kijun_length": { "default": "26", "description": "Base line period (Kijun-sen)." },
-    "senkou_b_length": { "default": "52", "description": "Leading span B period (Senkou Span B)." },
-    "displacement": { "default": "26", "description": "Number of periods to shift the cloud forward (chikou displacement)." }
+  "StochasticRSILevel": {
+    "description": "Emits a signal when the Stochastic RSI K-line crosses a defined threshold level, combining RSI and Stochastic for more sensitive overbought/oversold detection.",
+    "parameters": {
+      "rsi_length": { "default": "14", "description": "Number of periods for the RSI calculation." },
+      "stoch_length": { "default": "14", "description": "Number of periods for the Stochastic calculation." },
+      "k_period": { "default": "3", "description": "Smoothing periods for the %K line." },
+      "d_period": { "default": "3", "description": "Smoothing periods for the %D line." },
+      "threshold": { "default": "20.0", "description": "The level to check against: below this for BUY, above for SELL." },
+      "operation_type": { "default": "1", "description": "Signal type: 1 = BUY if K is below threshold, 2 = SELL if K is above threshold." }
+    }
+  },
+  "StochasticRSICross": {
+    "description": "Detects a crossover between Stochastic RSI %K and %D lines, optionally filtered by a threshold zone.",
+    "parameters": {
+      "rsi_length": { "default": "14", "description": "Number of periods for the RSI calculation." },
+      "stoch_length": { "default": "14", "description": "Number of periods for the Stochastic calculation." },
+      "k_period": { "default": "3", "description": "Smoothing periods for the %K line." },
+      "d_period": { "default": "3", "description": "Smoothing periods for the %D line." },
+      "threshold": { "default": null, "description": "Optional zone filter: cross must occur below this level for BUY or above for SELL." },
+      "operation_type": { "default": "1", "description": "Signal type: 1 = BUY when K crosses above D, 2 = SELL when K crosses below D." }
+    }
+  },
+  "ADXRange": {
+    "description": "Evaluates whether the ADX (Average Directional Index) trend strength falls within a specified range. Useful for filtering trades by trend strength.",
+    "parameters": {
+      "adx_length": { "default": "14", "description": "Number of periods for the ADX calculation." },
+      "adx_min": { "default": null, "description": "Minimum ADX value required to trigger a signal (optional)." },
+      "adx_max": { "default": null, "description": "Maximum ADX value allowed to trigger a signal (optional)." },
+      "operation_type": { "default": "1", "description": "Signal type to return if the ADX is within the specified range: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "DMPRange": {
+    "description": "Evaluates whether the Positive Directional Indicator (+DI) falls within a specific range. Used to measure and filter bullish directional pressure.",
+    "parameters": {
+      "adx_length": { "default": "14", "description": "Number of periods for the +DI calculation." },
+      "dmp_min": { "default": null, "description": "Minimum +DI value required to trigger a signal (optional)." },
+      "dmp_max": { "default": null, "description": "Maximum +DI value allowed to trigger a signal (optional)." },
+      "operation_type": { "default": "1", "description": "Signal type to return if the +DI is within the specified range: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "DMNRange": {
+    "description": "Evaluates whether the Negative Directional Indicator (-DI) falls within a specific range. Used to measure and filter bearish directional pressure.",
+    "parameters": {
+      "adx_length": { "default": "14", "description": "Number of periods for the -DI calculation." },
+      "dmn_min": { "default": null, "description": "Minimum -DI value required to trigger a signal (optional)." },
+      "dmn_max": { "default": null, "description": "Maximum -DI value allowed to trigger a signal (optional)." },
+      "operation_type": { "default": "2", "description": "Signal type to return if the -DI is within the specified range: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "ClosePrice": {
+    "description": "Checks if the current close price is within a specific percentage distance of a defined target price level. Useful for price target monitoring.",
+    "parameters": {
+      "target_level": { "default": null, "description": "The target price value to check against (required)." },
+      "tolerance_pct": { "default": "0.5", "description": "Maximum allowed percentage distance between current price and the target level." },
+      "operation_type": { "default": "1", "description": "Signal type to return if price is within range: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "NGreenCandles": {
+    "description": "Returns a signal if the most recent N consecutive candles are all green (Close > Open).",
+    "parameters": {
+      "n_candles_length": { "default": null, "description": "Number of consecutive green candles required (required)." },
+      "n_candles_operation": { "default": null, "description": "Signal type to return if condition is met: 1 = BUY, 2 = SELL (required)." },
+      "n_candles_offset": { "default": "0", "description": "Offset to shift the lookback window back by N candles." }
+    }
+  },
+  "NRedCandles": {
+    "description": "Returns a signal if the most recent N consecutive candles are all red (Close < Open).",
+    "parameters": {
+      "n_candles_length": { "default": "3", "description": "Number of consecutive red candles required." },
+      "n_candles_operation": { "default": "1", "description": "Signal type to return if condition is met: 1 = BUY, 2 = SELL." },
+      "n_candles_offset": { "default": "0", "description": "Offset to shift the lookback window back by N candles." }
+    }
+  },
+  "AboveEMA": {
+    "description": "Checks if the current close price is strictly above a calculated EMA.",
+    "parameters": {
+      "ema_length": { "default": "20", "description": "Number of periods for the EMA calculation." },
+      "operation_type": { "default": "1", "description": "Signal type to return if price is above the EMA: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "BelowEMA": {
+    "description": "Checks if the current close price is strictly below a calculated EMA.",
+    "parameters": {
+      "ema_length": { "default": "20", "description": "Number of periods for the EMA calculation." },
+      "operation_type": { "default": "2", "description": "Signal type to return if price is below the EMA: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "NearEMA": {
+    "description": "Checks if the current close price is within a specific percentage distance of a calculated EMA.",
+    "parameters": {
+      "ema_length": { "default": "20", "description": "Number of periods for the EMA calculation." },
+      "tolerance_pct": { "default": "0.5", "description": "Maximum allowed percentage distance between price and the EMA." },
+      "operation_type": { "default": "1", "description": "Signal type to return if price is within range: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "NearSupport": {
+    "description": "Identifies a dynamic support level (lowest low in the lookback window) and checks if current price is within a tolerance distance from it.",
+    "parameters": {
+      "support_lookback": { "default": "20", "description": "Number of candles to look back to find the support low." },
+      "tolerance_pct": { "default": "0.5", "description": "Maximum allowed percentage distance between price and the support level." },
+      "operation_type": { "default": "1", "description": "Signal type to return if price is near support: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "NearResistance": {
+    "description": "Identifies a dynamic resistance level (highest high in the lookback window) and checks if current price is within a tolerance distance from it.",
+    "parameters": {
+      "resistance_lookback": { "default": "20", "description": "Number of candles to look back to find the resistance high." },
+      "tolerance_pct": { "default": "0.5", "description": "Maximum allowed percentage distance between price and the resistance level." },
+      "operation_type": { "default": "2", "description": "Signal type to return if price is near resistance: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "PriceAboveBollingerBand": {
+    "description": "Checks if the current close price is above the Upper Bollinger Band, indicating a potential overextension or breakout.",
+    "parameters": {
+      "bb_length": { "default": "20", "description": "Number of periods for the Bollinger Band moving average." },
+      "bb_std": { "default": "2.0", "description": "Standard deviation multiplier for the bands." },
+      "operation_type": { "default": "2", "description": "Signal type to return if price is above the upper band: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "PriceBelowBollingerBand": {
+    "description": "Checks if the current close price is below the Lower Bollinger Band, indicating a potential mean-reversion opportunity.",
+    "parameters": {
+      "bb_length": { "default": "26", "description": "Number of periods for the Bollinger Band moving average." },
+      "bb_std": { "default": "2.0", "description": "Standard deviation multiplier for the bands." },
+      "operation_type": { "default": "1", "description": "Signal type to return if price is below the lower band: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "Doji": {
+    "description": "Detects a Doji candlestick pattern, where Open and Close are virtually equal, signifying indecision between buyers and sellers.",
+    "parameters": {
+      "operation_type": { "default": "1", "description": "Signal type to return when a Doji is detected: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "Hammer": {
+    "description": "Detects a Hammer candlestick pattern — a bullish reversal pattern with a small body at the top and a long lower shadow. Only triggers on green candles (Close > Open).",
+    "parameters": {}
+  },
+  "InvertedHammer": {
+    "description": "Detects an Inverted Hammer candlestick pattern — a bullish reversal pattern with a small body at the bottom and a long upper shadow. Only triggers on green candles (Close > Open).",
+    "parameters": {}
+  },
+  "ShootingStar": {
+    "description": "Detects a Shooting Star candlestick pattern — a bearish reversal pattern with a long upper shadow and small body. Only triggers on red candles (Close < Open).",
+    "parameters": {}
+  },
+  "Engulfing": {
+    "description": "Detects a two-candle Engulfing pattern. Returns BUY for Bullish Engulfing (large green candle engulfs prior red) or SELL for Bearish Engulfing (large red candle engulfs prior green).",
+    "parameters": {}
+  },
+  "Harami": {
+    "description": "Detects a Harami candlestick pattern — a two-candle reversal where a small candle is contained within the body of the preceding large candle. Returns BUY (bullish) or SELL (bearish).",
+    "parameters": {}
+  },
+  "DragonflyDoji": {
+    "description": "Detects a Dragonfly Doji pattern — Open, High, and Close are at the same level with a long lower shadow. Signals a potential bullish reversal.",
+    "parameters": {}
+  },
+  "GravestoneDoji": {
+    "description": "Detects a Gravestone Doji pattern — Open, Low, and Close are at the same level with a long upper shadow. Signals a potential bearish reversal.",
+    "parameters": {}
+  },
+  "MorningStar": {
+    "description": "Detects a Morning Star pattern — a three-candle bullish reversal pattern: a red candle, followed by a small-bodied candle, followed by a green candle.",
+    "parameters": {}
+  },
+  "EveningStar": {
+    "description": "Detects an Evening Star pattern — a three-candle bearish reversal pattern: a green candle, followed by a small-bodied candle, followed by a red candle.",
+    "parameters": {}
+  },
+  "HangingMan": {
+    "description": "Detects a Hanging Man pattern — a bearish reversal pattern with a small body and long lower shadow appearing at the top of an uptrend. Only triggers on red candles (Close < Open).",
+    "parameters": {}
+  },
+  "BullishCandlePattern": {
+    "description": "Composite indicator that aggregates multiple bullish candlestick patterns (Engulfing, Harami, DragonflyDoji, Hammer, InvertedHammer, MorningStar). Returns BUY if any of the underlying patterns are detected.",
+    "parameters": {}
+  },
+  "BearishCandlePattern": {
+    "description": "Composite indicator that aggregates multiple bearish candlestick patterns (Engulfing, Harami, GravestoneDoji, ShootingStar, HangingMan, EveningStar). Returns SELL if any of the underlying patterns are detected.",
+    "parameters": {}
+  },
+  "VolumeBreakout": {
+    "description": "Checks if the current candle's volume exceeds the average volume of the previous N candles by a defined percentage threshold.",
+    "parameters": {
+      "volume_lookback": { "default": "20", "description": "Number of previous candles used to calculate the average volume." },
+      "increase_pct": { "default": "50.0", "description": "Minimum percentage by which current volume must exceed the average (e.g., 50.0 means 50% above average)." },
+      "operation_type": { "default": "1", "description": "Signal type to return if the condition is met: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "LongCandle": {
+    "description": "Checks if the total range of the current candle (High - Low) is larger than the average range of previous N candles by a defined multiplier.",
+    "parameters": {
+      "lookback": { "default": "30", "description": "Number of previous candles used to calculate the average total range." },
+      "multiplier": { "default": "1.5", "description": "Multiplier applied to the average range. The current candle must exceed average * multiplier." },
+      "operation_type": { "default": "1", "description": "Signal type to return if the condition is met: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "CustomCandle": {
+    "description": "Evaluates a candle based on the percentage of its total range (High - Low) occupied by its upper and lower wicks. Allows fine-grained candle shape filtering.",
+    "parameters": {
+      "upper_wick_min": { "default": "0", "description": "Minimum percentage of the candle range that must be the upper wick (0–100)." },
+      "upper_wick_max": { "default": "100", "description": "Maximum percentage of the candle range allowed for the upper wick (0–100)." },
+      "lower_wick_min": { "default": "0", "description": "Minimum percentage of the candle range that must be the lower wick (0–100)." },
+      "lower_wick_max": { "default": "100", "description": "Maximum percentage of the candle range allowed for the lower wick (0–100)." },
+      "operation_type": { "default": "1", "description": "Signal type to return if all wick conditions are met: 1 = BUY, 2 = SELL." }
+    }
+  },
+  "LongBodyCandle": {
+    "description": "Checks if the body of the current candle (|Close - Open|) is larger than the average body of previous N candles by a defined multiplier.",
+    "parameters": {
+      "lookback": { "default": "20", "description": "Number of previous candles used to calculate the average candle body." },
+      "multiplier": { "default": "2.0", "description": "Multiplier applied to the average body. The current body must exceed average * multiplier." },
+      "operation_type": { "default": "1", "description": "Signal type to return if the condition is met: 1 = BUY, 2 = SELL." }
+    }
   }
 }

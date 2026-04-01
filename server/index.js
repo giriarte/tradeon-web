@@ -41,7 +41,17 @@ app.get('/api/users/:userId', async (req, res) => {
     if (!result.Items || result.Items.length === 0) {
       return res.status(404).json({ error: 'User not found' })
     }
-    res.json(result.Items[0])
+
+    const { email, userId: resolvedUserId } = result.Items[0]
+    const full = await ddb.send(new GetCommand({
+      TableName: USERS_TABLE,
+      Key: { email, userId: resolvedUserId },
+    }))
+
+    if (!full.Item) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+    res.json(full.Item)
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Internal server error' })

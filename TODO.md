@@ -4,9 +4,38 @@
 - [ ]
 
 ## Pending
-- [ ] Create USERS_USERID_GSI GSI on the CDK project, for the userId attribute (plus delete the one that was manually created in the DDB)
+- [ ] Update notification cooldown period.
+- [ ] Update the notification, send to the selected communication channel
+
+- [ ] Add Login and Signup pages.
+- [ ] Add authZ/authN (with Cognito?)
+- [ ] Add signup email confirmation and forgot password functionality
+
+- [ ] Alerts history section
+
+- [ ] Add subscription model
+- [ ] Add payments processing
+
+- [ ] Create domain in Route53
+- [ ] Configure SES to send email instead of using SNS
+- [ ] Configure SMS messages to send through SMS instead of using SNS (for phone alerts)
+
+- [ ] Add terms and conditions
+- [ ] Add Contact Us
+- [ ] Update context menu, Add the 3 lines for expanidble context menu and remove the static titles from the top bar (except Logout and user profile)
+- [ ] Add footer with terms and conditions, contact us, about us
+
+- [ ] Deploy Express server to Lambda
+- [ ] Deploy front to CloudFront
+- [ ] Testing and bug fixes
 
 ## Done
 - [x] Backend Express app boilerplate (`server/index.js`)
 - [x] Strategy management page (`src/pages/StrategyManagement.jsx`)
 - [x] Webapp skeleton: Home, UserProfile, UserMock
+- [x] Deploy the updated lambda with the new set of indicators. Test that everything works fine. Then commit the backend to the repo.
+- [x] Create USERS_USERID_GSI GSI on the CDK project, for the userId attribute (plus delete the one that was manually created in the DDB)
+- [x] Update notification subject. Include the pair for which the strategy is triggered.
+- [x] Adjust indicators with the params that are stored in DDB. Possibly delete the defaultParams field 
+- [x] Read the candleInterval from the strategy object, and use it on the process.
+- [x] Load all of the available indicators from the code into the config file
