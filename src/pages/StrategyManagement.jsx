@@ -14,6 +14,7 @@ const FIELD_INFO = {
   notificationChannel: 'Channel to receive alerts on. Create more channels in User Profile.',
   enabled: 'Whether this strategy is actively monitoring the market.',
   cooldownInterval: 'Minimum minutes between consecutive notifications for this strategy (default: 5).',
+  operationType: 'Direction this strategy trades. Long (buy) or Short (sell). Applied to all indicators on save.',
 }
 
 function InfoTooltip({ field, text }) {
@@ -190,10 +191,19 @@ function StrategyManagement() {
   const handleSave = () => {
     setSaving(true)
     setSaveSuccess(false)
+    const operationValue = (strategy.operationType ?? 'Long') === 'Long' ? 1 : 2
+    const payload = {
+      ...strategy,
+      baseIndicators: (strategy.baseIndicators ?? []).map(({ name, offset, params }) => ({
+        name,
+        offset,
+        params: { ...params, ...(params?.operation_type !== undefined ? { operation_type: operationValue } : {}) },
+      })),
+    }
     fetch(`${BASE_URL}/strategies/${strategy.userId}/${strategy.strategyId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(strategy),
+      body: JSON.stringify(payload),
     })
       .then(r => { if (!r.ok) throw new Error(`Failed to save strategy (${r.status})`); return r.json() })
       .then(data => {
@@ -281,6 +291,23 @@ function StrategyManagement() {
                     />
                   </div>
                 </div>
+                <div className="form-row" style={{ marginTop: 16 }}>
+                  <div className="form-group" style={{ flex: '0 0 auto' }}>
+                    <label>Operation Type <InfoTooltip field="operationType" /></label>
+                    <div className="operation-type-switch">
+                      <button
+                        type="button"
+                        className={`operation-type-btn${(strategy.operationType ?? 'Long') === 'Long' ? ' active' : ''}`}
+                        onClick={() => handleFieldChange('operationType', 'Long')}
+                      >Long</button>
+                      <button
+                        type="button"
+                        className={`operation-type-btn${(strategy.operationType ?? 'Long') === 'Short' ? ' active' : ''}`}
+                        onClick={() => handleFieldChange('operationType', 'Short')}
+                      >Short</button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Type + Symbols */}
@@ -366,9 +393,9 @@ function StrategyManagement() {
                       </div>
                       <button className="btn-remove-sm" onClick={() => removeIndicator(i)}>✕ Remove</button>
                     </div>
-                    {Object.keys(ind.params ?? {}).length > 0 && (
+                    {Object.keys(ind.params ?? {}).filter(k => k !== 'operation_type').length > 0 && (
                       <div className="indicator-params">
-                        {Object.entries(ind.params).map(([key, val]) => {
+                        {Object.entries(ind.params).filter(([key]) => key !== 'operation_type').map(([key, val]) => {
                           const paramDef = availableIndicators[ind.name]?.parameters?.[key]
                           return (
                             <div key={key} className="indicator-param-item">

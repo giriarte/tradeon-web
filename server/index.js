@@ -2,7 +2,7 @@ const { randomUUID } = require('crypto')
 const express = require('express')
 const cors = require('cors')
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb')
-const { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb')
+const { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, DeleteCommand, BatchGetCommand } = require('@aws-sdk/lib-dynamodb')
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -20,6 +20,8 @@ const ddb = DynamoDBDocumentClient.from(ddbClient)
 const USERS_TABLE = process.env.USERS_TABLE
 const STRATEGIES_TABLE = process.env.STRATEGIES_TABLE
 const USERS_USERID_GSI = process.env.USERS_USERID_GSI
+const ALERTS_TABLE = process.env.ALERTS_TABLE
+const ALERTS_USERID_GSI = process.env.ALERTS_USERID_GSI
 
 // ---------------------------------------------------------------------------
 // User routes
@@ -74,6 +76,58 @@ app.post('/api/users/:userId', async (req, res) => {
       Item: item,
     }))
     res.json(item)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// ---------------------------------------------------------------------------
+// Alerts routes
+// ---------------------------------------------------------------------------
+
+// GET /api/alerts/user/:userId?limit=10&nextToken=...
+app.get('/api/alerts/user/:userId', async (req, res) => {
+  const { userId } = req.params
+  const limit = parseInt(req.query.limit, 10) || 10
+  const nextToken = req.query.nextToken
+  console.log(`[GET] /api/alerts/user/${userId}`)
+
+  try {
+    const params = {
+      TableName: ALERTS_TABLE,
+      IndexName: ALERTS_USERID_GSI,
+      KeyConditionExpression: 'userId = :uid',
+      ExpressionAttributeValues: { ':uid': userId },
+      Limit: limit,
+    }
+
+    if (nextToken) {
+      params.ExclusiveStartKey = JSON.parse(Buffer.from(nextToken, 'base64').toString('utf8'))
+    }
+
+    const result = await ddb.send(new QueryCommand(params))
+
+    const keys = (result.Items ?? []).map(({ strategyId, alertId }) => ({ strategyId, alertId }))
+
+    let fullItems = []
+    if (keys.length) {
+      const batchResult = await ddb.send(new BatchGetCommand({
+        RequestItems: {
+          [ALERTS_TABLE]: { Keys: keys },
+        },
+      }))
+      fullItems = batchResult.Responses?.[ALERTS_TABLE] ?? []
+      // restore original GSI order
+      const order = new Map(keys.map(({ alertId }, i) => [alertId, i]))
+      fullItems.sort((a, b) => (order.get(a.alertId) ?? 0) - (order.get(b.alertId) ?? 0))
+    }
+
+    const responseNextToken = result.LastEvaluatedKey
+      ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString('base64')
+      : null
+
+    res.json({ items: fullItems, nextToken: responseNextToken })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Internal server error' })

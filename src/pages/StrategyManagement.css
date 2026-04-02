@@ -350,6 +350,55 @@
   box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.15);
 }
 
+.indicator-offset-operation-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.indicator-operation-type-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.operation-type-switch {
+  display: flex;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.operation-type-btn {
+  padding: 4px 12px;
+  height: 32px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: none;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.operation-type-btn:first-child {
+  border-right: 1px solid #cbd5e1;
+}
+
+.operation-type-btn.active {
+  background: #2b6cb0;
+  color: #fff;
+}
+
+.operation-type-btn:not(.active):hover {
+  background: #f1f5f9;
+}
+
 .indicator-params {
   display: flex;
   flex-wrap: wrap;

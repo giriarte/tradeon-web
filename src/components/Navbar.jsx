@@ -14,6 +14,7 @@ function Navbar() {
         <li><NavLink to="/" end>Home</NavLink></li>
         <li><NavLink to="/user-profile">User Profile</NavLink></li>
         <li><NavLink to="/strategy-management">Strategy Management</NavLink></li>
+        <li><NavLink to="/alerts">Alerts</NavLink></li>
         <li><a href="#" onClick={handleLogout} className="logout-link">Logout</a></li>
       </ul>
     </nav>
