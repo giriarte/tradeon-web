@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { BASE_URL, USER_ID } from '../config'
+import { BASE_URL } from '../config'
+import { useAuth } from '../context/AuthContext'
 import './Alerts.css'
 
 const PAGE_SIZE = 10
@@ -24,6 +25,7 @@ function getSortValue(item, key) {
 }
 
 function Alerts() {
+  const { userId } = useAuth()
   const [items, setItems] = useState([])
   const [strategies, setStrategies] = useState([])
   const [loading, setLoading] = useState(true)
@@ -39,7 +41,7 @@ function Alerts() {
   const [strategyFilter, setStrategyFilter] = useState('')
 
   useEffect(() => {
-    fetch(`${BASE_URL}/strategies/user/${USER_ID}`)
+    fetch(`${BASE_URL}/strategies/user/${userId}`)
       .then(r => r.json())
       .then(data => setStrategies(data ?? []))
       .catch(() => {})
@@ -52,7 +54,7 @@ function Alerts() {
   const loadPage = (token) => {
     setLoading(true)
     setError(null)
-    const url = `${BASE_URL}/alerts/user/${USER_ID}?limit=${PAGE_SIZE}${token ? `&nextToken=${encodeURIComponent(token)}` : ''}`
+    const url = `${BASE_URL}/alerts/user/${userId}?limit=${PAGE_SIZE}${token ? `&nextToken=${encodeURIComponent(token)}` : ''}`
     fetch(url)
       .then(r => { if (!r.ok) throw new Error(`Failed to load alerts (${r.status})`); return r.json() })
       .then(data => {

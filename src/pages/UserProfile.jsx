@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
-import { BASE_URL, USER_ID } from '../config'
+import { BASE_URL } from '../config'
+import { useAuth } from '../context/AuthContext'
 import NotificationChannelRow from '../components/NotificationChannelRow'
 import './UserProfile.css'
 
 function UserProfile() {
+  const { userId } = useAuth()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -11,7 +13,7 @@ function UserProfile() {
   const [saveSuccess, setSaveSuccess] = useState(false)
 
   useEffect(() => {
-    fetch(`${BASE_URL}/users/${USER_ID}`)
+    fetch(`${BASE_URL}/users/${userId}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load profile (${res.status})`)
         return res.json()
@@ -60,7 +62,7 @@ function UserProfile() {
   const handleSave = () => {
     setSaving(true)
     setSaveSuccess(false)
-    fetch(`${BASE_URL}/users/${USER_ID}`, {
+    fetch(`${BASE_URL}/users/${userId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(user),

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import './Home.css'
 
 const sections = [
@@ -12,16 +13,31 @@ const sections = [
     title: 'Strategy Management',
     description: 'Configure and manage your trading strategies.',
   },
+  {
+    path: '/login',
+    title: 'Log In',
+    description: 'Sign in to your TradeOn account.',
+  },
+  {
+    path: '/signup',
+    title: 'Sign Up',
+    description: 'Create a new TradeOn account.',
+  },
 ]
 
 function Home() {
   const navigate = useNavigate()
+  const { userId } = useAuth()
+
+  const visibleSections = userId
+    ? sections.filter(s => s.path !== '/login' && s.path !== '/signup')
+    : sections
 
   return (
     <div className="home">
       <h1>Welcome to TradeOn</h1>
       <div className="home-grid">
-        {sections.map((section) => (
+        {visibleSections.map((section) => (
           <button
             key={section.path}
             className="home-card"

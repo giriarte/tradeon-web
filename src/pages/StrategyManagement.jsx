@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { BASE_URL, USER_ID } from '../config'
+import { BASE_URL } from '../config'
+import { useAuth } from '../context/AuthContext'
 import './StrategyManagement.css'
 
 const FIELD_INFO = {
@@ -28,6 +29,7 @@ function InfoTooltip({ field, text }) {
 }
 
 function StrategyManagement() {
+  const { userId } = useAuth()
   const [strategies, setStrategies] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [strategy, setStrategy] = useState(null)
@@ -45,8 +47,8 @@ function StrategyManagement() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${BASE_URL}/strategies/user/${USER_ID}`).then(r => { if (!r.ok) throw new Error(`Failed to load strategies (${r.status})`); return r.json() }),
-      fetch(`${BASE_URL}/users/${USER_ID}`).then(r => { if (!r.ok) throw new Error(`Failed to load user (${r.status})`); return r.json() }),
+      fetch(`${BASE_URL}/strategies/user/${userId}`).then(r => { if (!r.ok) throw new Error(`Failed to load strategies (${r.status})`); return r.json() }),
+      fetch(`${BASE_URL}/users/${userId}`).then(r => { if (!r.ok) throw new Error(`Failed to load user (${r.status})`); return r.json() }),
       fetch('/availablePairs.json').then(r => r.json()),
       fetch('/availableIndicators.json').then(r => r.json()),
     ])
@@ -66,7 +68,7 @@ function StrategyManagement() {
   const handleCreateStrategy = () => {
     if (!newStrategyName.trim()) return
     setCreating(true)
-    fetch(`${BASE_URL}/strategies/user/${USER_ID}`, {
+    fetch(`${BASE_URL}/strategies/user/${userId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newStrategyName.trim() }),
@@ -86,7 +88,7 @@ function StrategyManagement() {
     setStrategy(null)
     setLoadingForm(true)
     setSaveSuccess(false)
-    fetch(`${BASE_URL}/strategies/${USER_ID}/${strategyId}`)
+    fetch(`${BASE_URL}/strategies/${userId}/${strategyId}`)
       .then(r => { if (!r.ok) throw new Error(`Failed to load strategy (${r.status})`); return r.json() })
       .then(data => { setStrategy(data); setLoadingForm(false) })
       .catch(err => { setError(err.message); setLoadingForm(false) })

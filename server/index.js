@@ -1,8 +1,8 @@
-const { randomUUID } = require('crypto')
+const { randomUUID, scryptSync, randomBytes } = require('crypto')
 const express = require('express')
 const cors = require('cors')
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb')
-const { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, DeleteCommand, BatchGetCommand } = require('@aws-sdk/lib-dynamodb')
+const { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, DeleteCommand, BatchGetCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb')
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -22,6 +22,132 @@ const STRATEGIES_TABLE = process.env.STRATEGIES_TABLE
 const USERS_USERID_GSI = process.env.USERS_USERID_GSI
 const ALERTS_TABLE = process.env.ALERTS_TABLE
 const ALERTS_USERID_GSI = process.env.ALERTS_USERID_GSI
+
+// ---------------------------------------------------------------------------
+// Auth routes
+// ---------------------------------------------------------------------------
+
+// POST /api/auth/login
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body
+  console.log(`[POST] /api/auth/login`, { email })
+
+  try {
+    const result = await ddb.send(new QueryCommand({
+      TableName: USERS_TABLE,
+      KeyConditionExpression: 'email = :email',
+      ExpressionAttributeValues: { ':email': email },
+      Limit: 1,
+    }))
+
+    const user = result.Items?.[0]
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' })
+    }
+
+    const [salt, storedHash] = user.password.split(':')
+    const inputHash = scryptSync(password, salt, 64).toString('hex')
+    if (inputHash !== storedHash) {
+      return res.status(401).json({ error: 'Invalid email or password' })
+    }
+
+    if (!user.active) {
+      return res.status(403).json({ error: 'Account not confirmed. Please check your email.' })
+    }
+
+    const { password: _, ...safeUser } = user
+    res.json(safeUser)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// POST /api/auth/signup
+app.post('/api/auth/signup', async (req, res) => {
+  const { firstName, lastName, email, phone, password } = req.body
+  console.log(`[POST] /api/auth/signup`, { firstName, lastName, email, phone })
+
+  try {
+    // Check if email is already registered
+    const existing = await ddb.send(new QueryCommand({
+      TableName: USERS_TABLE,
+      KeyConditionExpression: 'email = :email',
+      ExpressionAttributeValues: { ':email': email },
+      Limit: 1,
+    }))
+    if (existing.Items && existing.Items.length > 0) {
+      return res.status(409).json({ error: 'Email is already registered' })
+    }
+
+    // Hash password with a random salt
+    const salt = randomBytes(16).toString('hex')
+    const hashedPassword = `${salt}:${scryptSync(password, salt, 64).toString('hex')}`
+
+    const userId = `user-${randomUUID().slice(0, 8)}`
+    const item = {
+      email,
+      userId,
+      firstName,
+      lastName,
+      phoneNumber: phone,
+      password: hashedPassword,
+      notificationChannels: [],
+      active: false,
+      createdAt: new Date().toISOString(),
+    }
+
+    await ddb.send(new PutCommand({ TableName: USERS_TABLE, Item: item }))
+
+    const { password: _, ...safeItem } = item
+    res.status(201).json(safeItem)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// POST /api/auth/confirm/:userId
+app.post('/api/auth/confirm/:userId', async (req, res) => {
+  const { userId } = req.params
+  console.log(`[POST] /api/auth/confirm/${userId}`)
+
+  try {
+    // Resolve the full primary key via the userId GSI
+    const result = await ddb.send(new QueryCommand({
+      TableName: USERS_TABLE,
+      IndexName: USERS_USERID_GSI,
+      KeyConditionExpression: 'userId = :uid',
+      ExpressionAttributeValues: { ':uid': userId },
+      Limit: 1,
+    }))
+
+    if (!result.Items || result.Items.length === 0) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const { email } = result.Items[0]
+
+    await ddb.send(new UpdateCommand({
+      TableName: USERS_TABLE,
+      Key: { email, userId },
+      UpdateExpression: 'SET active = :true',
+      ExpressionAttributeValues: { ':true': true },
+    }))
+
+    res.json({ message: 'Account confirmed' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// POST /api/auth/forgot-password
+app.post('/api/auth/forgot-password', (req, res) => {
+  const { email } = req.body
+  console.log(`[POST] /api/auth/forgot-password`, { email })
+  res.json({ message: 'Password reset request received' })
+})
 
 // ---------------------------------------------------------------------------
 // User routes
