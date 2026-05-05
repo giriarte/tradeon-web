@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Read(//c/temp/**)",
+      "Read(//tmp/**)",
+      "Read(//temp/**)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\tito_\\\\workplace\\\\tradeon-web\\\\src\" -Force | Format-Table Name, @{Name=\"Type\"; Expression={if\\($_.PSIsContainer\\){\"Directory\"}else{\"File\"}}} -AutoSize)"
     ]
   }
 }

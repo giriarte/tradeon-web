@@ -1,8 +1,17 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { BASE_URL } from '../config'
 import { useAuth } from '../context/AuthContext'
 import NotificationChannelRow from '../components/NotificationChannelRow'
 import './UserProfile.css'
+
+const STATUS_LABELS = {
+  ACTIVE: { label: 'Active', cls: 'sub-status-active' },
+  TRIALING: { label: 'Trial', cls: 'sub-status-trial' },
+  PAST_DUE: { label: 'Past Due', cls: 'sub-status-pastdue' },
+  CANCELLED: { label: 'Cancelled', cls: 'sub-status-cancelled' },
+  EXPIRED: { label: 'Expired', cls: 'sub-status-expired' },
+}
 
 function UserProfile() {
   const { userId } = useAuth()
@@ -11,6 +20,7 @@ function UserProfile() {
   const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [subscription, setSubscription] = useState(null)
 
   useEffect(() => {
     fetch(`${BASE_URL}/users/${userId}`)
@@ -26,6 +36,16 @@ function UserProfile() {
         setError(err.message)
         setLoading(false)
       })
+
+    fetch(`${BASE_URL}/subscriptions/user/${userId}`)
+      .then((res) => {
+        if (!res.ok) return null
+        return res.json()
+      })
+      .then((data) => {
+        if (data) setSubscription(data)
+      })
+      .catch(() => {})
   }, [])
 
   const handleFieldChange = (field, value) => {
@@ -138,6 +158,34 @@ function UserProfile() {
               />
             </div>
           </div>
+        </div>
+
+        <div className="form-section">
+          <div className="section-header">
+            <h2>Subscription</h2>
+            <Link to="/subscription" className="subscription-details-link" target="_blank" rel="noopener noreferrer">View details</Link>
+          </div>
+          {subscription ? (
+            <div className="subscription-summary">
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Plan</label>
+                  <input type="text" value={subscription.type ?? ''} readOnly className="input-readonly" />
+                </div>
+                <div className="form-group">
+                  <label>Status</label>
+                  <input
+                    type="text"
+                    value={STATUS_LABELS[subscription.status]?.label ?? subscription.status ?? ''}
+                    readOnly
+                    className={`input-readonly sub-status-input ${STATUS_LABELS[subscription.status]?.cls ?? ''}`}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="empty-channels">No active subscription. <Link to="/subscription">Choose a plan</Link>.</p>
+          )}
         </div>
 
         <div className="form-section">

@@ -65,6 +65,38 @@
   margin-top: 16px;
 }
 
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-header h2 {
+  margin: 0;
+}
+
+.subscription-details-link {
+  font-size: 0.85rem;
+  color: #2b6cb0;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.subscription-details-link:hover {
+  text-decoration: underline;
+}
+
+.subscription-summary {
+  margin-top: 0;
+}
+
+.sub-status-active { color: #276749 !important; background-color: #f0fff4 !important; }
+.sub-status-trial  { color: #744210 !important; background-color: #fffff0 !important; }
+.sub-status-pastdue { color: #7b341e !important; background-color: #fff5f0 !important; }
+.sub-status-cancelled { color: #702459 !important; background-color: #fff5f7 !important; }
+.sub-status-expired { color: #718096 !important; background-color: #edf2f7 !important; }
+
 .empty-channels {
   font-size: 0.9rem;
   color: #94a3b8;

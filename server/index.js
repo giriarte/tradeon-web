@@ -22,6 +22,10 @@ const STRATEGIES_TABLE = process.env.STRATEGIES_TABLE
 const USERS_USERID_GSI = process.env.USERS_USERID_GSI
 const ALERTS_TABLE = process.env.ALERTS_TABLE
 const ALERTS_USERID_GSI = process.env.ALERTS_USERID_GSI
+const SUBSCRIPTIONS_TABLE = process.env.SUBSCRIPTIONS_TABLE
+const PAYMENT_METHODS_TABLE = process.env.PAYMENT_METHODS_TABLE
+const INVOICES_TABLE = process.env.INVOICES_TABLE
+const PAYMENTS_TABLE = process.env.PAYMENTS_TABLE
 
 // ---------------------------------------------------------------------------
 // Auth routes
@@ -364,6 +368,232 @@ app.delete('/api/strategies/:userId/:strategyId', async (req, res) => {
       Key: { userId, strategyId },
     }))
     res.status(204).send()
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// ---------------------------------------------------------------------------
+// Subscription routes
+// ---------------------------------------------------------------------------
+
+// GET /api/subscriptions/user/:userId — get active subscription for a user
+app.get('/api/subscriptions/user/:userId', async (req, res) => {
+  const { userId } = req.params
+  console.log(`[GET] /api/subscriptions/user/${userId}`)
+
+  try {
+    const result = await ddb.send(new QueryCommand({
+      TableName: SUBSCRIPTIONS_TABLE,
+      KeyConditionExpression: 'userId = :uid',
+      ExpressionAttributeValues: { ':uid': userId },
+    }))
+
+    const items = result.Items ?? []
+    // Return the most recent active subscription, falling back to any item
+    const active = items.find(s => s.status === 'ACTIVE') ?? items[0] ?? null
+    res.json(active)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// POST /api/subscriptions/user/:userId — create or update a subscription
+app.post('/api/subscriptions/user/:userId', async (req, res) => {
+  const { userId } = req.params
+  console.log(`[POST] /api/subscriptions/user/${userId}`, req.body)
+
+  try {
+    const subscriptionId = req.body.subscriptionId || `sub-${randomUUID().slice(0, 8)}`
+    const now = new Date().toISOString()
+    const item = {
+      ...req.body,
+      userId,
+      subscriptionId,
+      updatedAt: now,
+      createdAt: req.body.createdAt || now,
+    }
+    await ddb.send(new PutCommand({ TableName: SUBSCRIPTIONS_TABLE, Item: item }))
+    res.status(201).json(item)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// POST /api/subscriptions/user/:userId/:subscriptionId/cancel — cancel a subscription
+app.post('/api/subscriptions/user/:userId/:subscriptionId/cancel', async (req, res) => {
+  const { userId, subscriptionId } = req.params
+  const { cancelReason } = req.body
+  console.log(`[POST] /api/subscriptions/user/${userId}/${subscriptionId}/cancel`)
+
+  try {
+    const now = new Date().toISOString()
+    await ddb.send(new UpdateCommand({
+      TableName: SUBSCRIPTIONS_TABLE,
+      Key: { userId, subscriptionId },
+      UpdateExpression: 'SET #status = :cancelled, cancelledAt = :now, updatedAt = :now, cancelReason = :reason',
+      ExpressionAttributeNames: { '#status': 'status' },
+      ExpressionAttributeValues: {
+        ':cancelled': 'CANCELLED',
+        ':now': now,
+        ':reason': cancelReason || '',
+      },
+    }))
+    res.json({ message: 'Subscription cancelled' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// ---------------------------------------------------------------------------
+// Payment method routes
+// ---------------------------------------------------------------------------
+
+// GET /api/payment-methods/user/:userId
+app.get('/api/payment-methods/user/:userId', async (req, res) => {
+  const { userId } = req.params
+  console.log(`[GET] /api/payment-methods/user/${userId}`)
+
+  try {
+    const result = await ddb.send(new QueryCommand({
+      TableName: PAYMENT_METHODS_TABLE,
+      KeyConditionExpression: 'userId = :uid',
+      ExpressionAttributeValues: { ':uid': userId },
+    }))
+    res.json(result.Items ?? [])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// POST /api/payment-methods/user/:userId — add a payment method
+app.post('/api/payment-methods/user/:userId', async (req, res) => {
+  const { userId } = req.params
+  console.log(`[POST] /api/payment-methods/user/${userId}`, req.body)
+
+  try {
+    const paymentMethodId = `pm-${randomUUID().slice(0, 8)}`
+    const now = new Date().toISOString()
+    const item = { ...req.body, userId, paymentMethodId, createdAt: now, updatedAt: now }
+    await ddb.send(new PutCommand({ TableName: PAYMENT_METHODS_TABLE, Item: item }))
+    res.status(201).json(item)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// POST /api/payment-methods/user/:userId/:paymentMethodId/set-default
+app.post('/api/payment-methods/user/:userId/:paymentMethodId/set-default', async (req, res) => {
+  const { userId, paymentMethodId } = req.params
+  console.log(`[POST] /api/payment-methods/user/${userId}/${paymentMethodId}/set-default`)
+
+  try {
+    // Fetch all methods to unset existing default
+    const all = await ddb.send(new QueryCommand({
+      TableName: PAYMENT_METHODS_TABLE,
+      KeyConditionExpression: 'userId = :uid',
+      ExpressionAttributeValues: { ':uid': userId },
+    }))
+
+    const now = new Date().toISOString()
+    await Promise.all((all.Items ?? []).map(item =>
+      ddb.send(new UpdateCommand({
+        TableName: PAYMENT_METHODS_TABLE,
+        Key: { userId, paymentMethodId: item.paymentMethodId },
+        UpdateExpression: 'SET isDefault = :val, updatedAt = :now',
+        ExpressionAttributeValues: {
+          ':val': item.paymentMethodId === paymentMethodId,
+          ':now': now,
+        },
+      }))
+    ))
+
+    res.json({ message: 'Default payment method updated' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// DELETE /api/payment-methods/user/:userId/:paymentMethodId
+app.delete('/api/payment-methods/user/:userId/:paymentMethodId', async (req, res) => {
+  const { userId, paymentMethodId } = req.params
+  console.log(`[DELETE] /api/payment-methods/user/${userId}/${paymentMethodId}`)
+
+  try {
+    await ddb.send(new DeleteCommand({
+      TableName: PAYMENT_METHODS_TABLE,
+      Key: { userId, paymentMethodId },
+    }))
+    res.status(204).send()
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// ---------------------------------------------------------------------------
+// Invoice routes
+// ---------------------------------------------------------------------------
+
+// GET /api/invoices/user/:userId
+app.get('/api/invoices/user/:userId', async (req, res) => {
+  const { userId } = req.params
+  console.log(`[GET] /api/invoices/user/${userId}`)
+
+  try {
+    const result = await ddb.send(new QueryCommand({
+      TableName: INVOICES_TABLE,
+      KeyConditionExpression: 'userId = :uid',
+      ExpressionAttributeValues: { ':uid': userId },
+    }))
+    res.json(result.Items ?? [])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// GET /api/invoices/user/:userId/:invoiceId
+app.get('/api/invoices/user/:userId/:invoiceId', async (req, res) => {
+  const { userId, invoiceId } = req.params
+  console.log(`[GET] /api/invoices/user/${userId}/${invoiceId}`)
+
+  try {
+    const result = await ddb.send(new GetCommand({
+      TableName: INVOICES_TABLE,
+      Key: { userId, invoiceId },
+    }))
+    if (!result.Item) return res.status(404).json({ error: 'Invoice not found' })
+    res.json(result.Item)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// ---------------------------------------------------------------------------
+// Payment history routes
+// ---------------------------------------------------------------------------
+
+// GET /api/payments/user/:userId
+app.get('/api/payments/user/:userId', async (req, res) => {
+  const { userId } = req.params
+  console.log(`[GET] /api/payments/user/${userId}`)
+
+  try {
+    const result = await ddb.send(new QueryCommand({
+      TableName: PAYMENTS_TABLE,
+      KeyConditionExpression: 'userId = :uid',
+      ExpressionAttributeValues: { ':uid': userId },
+    }))
+    res.json(result.Items ?? [])
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Internal server error' })

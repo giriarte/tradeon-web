@@ -1,0 +1,319 @@
+.billing-page {
+  padding-top: 8px;
+}
+
+.card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px 28px;
+}
+
+/* Next due banner */
+.next-due-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 14px 20px;
+  margin-bottom: 24px;
+}
+
+.next-due-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #92400e;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.next-due-date {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #78350f;
+}
+
+/* Billing sections */
+.billing-section {
+  margin-bottom: 24px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  margin-bottom: 0;
+}
+
+.btn-add-method {
+  background-color: #ebf8ff;
+  color: #2b6cb0;
+  border: 1px solid #bee3f8;
+  padding: 7px 16px;
+  font-size: 0.88rem;
+}
+
+.btn-add-method:hover {
+  background-color: #bee3f8;
+}
+
+/* Payment method cards */
+.methods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.payment-method-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 14px 18px;
+  transition: border-color 0.2s;
+}
+
+.method-default {
+  border-color: #63b3ed;
+  background-color: #f0f8ff;
+}
+
+.method-icon {
+  font-size: 1.2rem;
+  width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.method-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.method-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.method-sublabel {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.method-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.default-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background-color: #ebf8ff;
+  color: #2b6cb0;
+  border: 1px solid #bee3f8;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.btn-ghost {
+  background: none;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 5px 12px;
+  font-size: 0.82rem;
+  border-radius: 6px;
+}
+
+.btn-ghost:hover {
+  background-color: #f1f5f9;
+}
+
+.btn-danger {
+  color: #c53030;
+  border-color: #fed7d7;
+}
+
+.btn-danger:hover {
+  background-color: #fff5f5;
+}
+
+/* Add payment method form */
+.add-method-form {
+  margin-bottom: 16px;
+  border-color: #bee3f8;
+}
+
+.add-method-form h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.form-group label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.form-group input,
+.form-group select {
+  height: 38px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 0.92rem;
+  color: #1a1a2e;
+  background-color: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #63b3ed;
+  box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.15);
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f4f8;
+}
+
+.btn-primary {
+  background-color: #2b6cb0;
+  color: #ffffff;
+  padding: 8px 20px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #2c5282;
+}
+
+/* Tables */
+.billing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.billing-table thead th {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  padding: 8px 12px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.billing-table tbody tr {
+  border-bottom: 1px solid #f0f4f8;
+  transition: background 0.15s;
+}
+
+.billing-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.billing-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.billing-table td {
+  padding: 10px 12px;
+  color: #374151;
+  vertical-align: middle;
+}
+
+.mono {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.badge-paid          { background-color: #f0fff4; color: #276749; border: 1px solid #c6f6d5; }
+.badge-open          { background-color: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; }
+.badge-draft         { background-color: #f8f8f8; color: #718096; border: 1px solid #e2e8f0; }
+.badge-void          { background-color: #fafafa; color: #a0aec0; border: 1px solid #e2e8f0; }
+.badge-uncollectible { background-color: #fff5f5; color: #c53030; border: 1px solid #fed7d7; }
+
+/* Empty / status */
+.empty-state {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  padding: 8px 0;
+}
+
+.status-message {
+  padding: 40px 0;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.error-message {
+  color: #c53030;
+  background-color: #fff5f5;
+  border: 1px solid #fed7d7;
+  padding: 14px 18px;
+  border-radius: 8px;
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.success-banner {
+  font-size: 0.88rem;
+  color: #276749;
+  background-color: #f0fff4;
+  border: 1px solid #c6f6d5;
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}

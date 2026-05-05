@@ -20,6 +20,8 @@ function Navbar() {
         <li><NavLink to="/user-profile">User Profile</NavLink></li>
         <li><NavLink to="/strategy-management">Strategy Management</NavLink></li>
         <li><NavLink to="/alerts">Alerts</NavLink></li>
+        <li><NavLink to="/subscription">Subscription</NavLink></li>
+        <li><NavLink to="/billing">Billing</NavLink></li>
         <li><a href="#" onClick={handleLogout} className="logout-link">Logout</a></li>
       </ul>
     </nav>
