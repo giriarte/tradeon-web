@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { BASE_URL } from '../config'
 import { useAuth } from '../context/AuthContext'
+import availablePairsData from '../../public/availablePairs.json'
+import availableIndicatorsData from '../../public/availableIndicators.json'
 import './StrategyManagement.css'
 
 const FIELD_INFO = {
@@ -49,14 +51,12 @@ function StrategyManagement() {
     Promise.all([
       fetch(`${BASE_URL}/strategies/user/${userId}`).then(r => { if (!r.ok) throw new Error(`Failed to load strategies (${r.status})`); return r.json() }),
       fetch(`${BASE_URL}/users/${userId}`).then(r => { if (!r.ok) throw new Error(`Failed to load user (${r.status})`); return r.json() }),
-      fetch('/availablePairs.json').then(r => r.json()),
-      fetch('/availableIndicators.json').then(r => r.json()),
     ])
-      .then(([stratList, userProfile, pairs, indicators]) => {
+      .then(([stratList, userProfile]) => {
         setStrategies(stratList)
         setUserChannels(userProfile.notificationChannels ?? [])
-        setAvailablePairs(pairs)
-        setAvailableIndicators(indicators)
+        setAvailablePairs(availablePairsData)
+        setAvailableIndicators(availableIndicatorsData)
         setLoadingList(false)
       })
       .catch(err => {

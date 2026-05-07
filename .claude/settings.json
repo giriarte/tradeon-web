@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /b \"c:\\\\Users\\\\tito_\\\\workplace\\\\tradeon-web\\\\server.env\")",
+      "Bash(git -C \"c:\\\\Users\\\\tito_\\\\workplace\\\\tradeon-web\" ls-files --others --exclude-standard)",
+      "Bash(git -C \"c:\\\\Users\\\\tito_\\\\workplace\\\\tradeon-web\" ls-files)",
+      "Bash(git -C \"c:\\\\Users\\\\tito_\\\\workplace\\\\tradeon-web\" log --all --full-history -- \"**/.env*\" \"**/*.env\")",
+      "Bash(git -C \"c:\\\\Users\\\\tito_\\\\workplace\\\\tradeon-web\" log --all --oneline --diff-filter=A -- \"*.env\" \".env\" \"server.env\")",
+      "Bash(git -C \"c:\\\\Users\\\\tito_\\\\workplace\\\\tradeon-web\" log --all --oneline --name-only)",
+      "Bash(git -C \"c:\\\\Users\\\\tito_\\\\workplace\\\\tradeon-web\" log --all --oneline)",
+      "Bash(git -C \"c:\\\\Users\\\\tito_\\\\workplace\\\\tradeon-web\" show 06e48af --name-only)",
+      "Bash(git -C \"c:\\\\Users\\\\tito_\\\\workplace\\\\tradeon-web\" log --all -p --follow -- \"server/index.js\")",
+      "Bash(git -C \"c:\\\\Users\\\\tito_\\\\workplace\\\\tradeon-web\" ls-files \"server/.env\")"
+    ]
+  }
+}
